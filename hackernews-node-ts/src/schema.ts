@@ -7,9 +7,12 @@ import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library'
 const typeDefinitions = /* GraphQL */ `
   type Query {
     info: String!
-    feed(limit: Int): [Link!]!
-    comment(id: ID!): Comment
     link(id: ID!): Link
+    comment(id: ID!): Comment
+    feed(
+        filter: String 
+        limit: Int
+        ): [Link!]!
   }
  
   type Mutation {
@@ -35,7 +38,18 @@ const typeDefinitions = /* GraphQL */ `
 const resolvers = {
     Query: {
         info: () => `This is the API of a Hackernews Clone`,
-        feed: (parent: unknown, args: {limit: number}, context: GraphQLContext) => context.prisma.link.findMany({ take: args.limit}),
+        async feed(parent: unknown, args: {filter: string, limit: number}, 
+            context: GraphQLContext)  {
+                const where = args.filter 
+                    ? {
+                        OR: [
+                            { description: { contains: args.filter } },
+                            { url: { contains: args.filter } }
+                        ]
+                      }
+                    : {}
+                return context.prisma.link.findMany({ where, take: args.limit})
+        },
         async comment( parent: unknown, args: { id: string }, context: GraphQLContext ) {
             return context.prisma.comment.findUnique({
                 where: { id: parseInt(args.id) }
