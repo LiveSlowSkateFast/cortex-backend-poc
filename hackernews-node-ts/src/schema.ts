@@ -1,5 +1,5 @@
 import { makeExecutableSchema } from '@graphql-tools/schema'
-import type { Link } from '@prisma/client'
+import type { Link, Comment } from '@prisma/client'
 import type { GraphQLContext } from './context'
 
 
@@ -8,6 +8,7 @@ const typeDefinitions = /* GraphQL */ `
     info: String!
     feed(limit: Int): [Link!]!
     comment(id: ID!): Comment
+    link(id: ID!): Link
   }
  
   type Mutation {
@@ -26,6 +27,7 @@ const typeDefinitions = /* GraphQL */ `
     id: ID!
     body: String!
     link: Link!
+    linkId: Int!
    }
 `
 
@@ -33,12 +35,13 @@ const resolvers = {
     Query: {
         info: () => `This is the API of a Hackernews Clone`,
         feed: (parent: unknown, args: {limit: number}, context: GraphQLContext) => context.prisma.link.findMany({ take: args.limit}),
-        async comment(
-            parent: unknown,
-            args: { id: string },
-            context: GraphQLContext
-        ) {
+        async comment( parent: unknown, args: { id: string }, context: GraphQLContext ) {
             return context.prisma.comment.findUnique({
+                where: { id: parseInt(args.id) }
+            })
+        },
+        async link( parent: unknown, args: { id: string }, context: GraphQLContext ) {
+            return context.prisma.link.findUnique({
                 where: { id: parseInt(args.id) }
             })
         }
@@ -54,6 +57,17 @@ const resolvers = {
         ) {
             return context.prisma.comment.findMany({
                 where: { linkId: parent.id }
+            })
+        }
+    },
+    Comment:{
+        link(
+            parent: Comment,
+            args: {},
+            context: GraphQLContext
+        ) {
+            return context.prisma.link.findUnique({
+                where: { id: parent.linkId || undefined }
             })
         }
     },
