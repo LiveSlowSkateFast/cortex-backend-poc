@@ -1,5 +1,8 @@
 import { makeExecutableSchema } from '@graphql-tools/schema'
- 
+import type { Link } from '@prisma/client'
+import type { GraphQLContext } from './context'
+
+
 const typeDefinitions = /* GraphQL */ `
   type Query {
     info: String!
@@ -16,45 +19,35 @@ const typeDefinitions = /* GraphQL */ `
     url: String!
   }
 `
-type Link = {
-    id: string
-    url: string
-    description: string
-  }
-   
-  const links: Link[] = [
-    {
-      id: 'link-0',
-      url: 'www.howtographql.com',
-      description: 'Fullstack tutorial for GraphQL'
-    }
-  ]
-   
-  const resolvers = {
+
+const resolvers = {
     Query: {
-      info: () => `This is the API of a Hackernews Clone`,
-      feed: () => links
+        info: () => `This is the API of a Hackernews Clone`,
+        feed: (parent: unknown, args: {}, context: GraphQLContext) => context.prisma.link.findMany()
+    },
+    Link: {
+        id: (parent: Link) => parent.id,
+        description: (parent: Link) => parent.description,
+        url: (parent: Link) => parent.url
     },
     Mutation: {
-      postLink: (parent: unknown, args: { description: string; url: string }) => {
-        // 1
-        let idCount = links.length
-   
-        // 2
-        const link: Link = {
-          id: `link-${idCount}`,
-          description: args.description,
-          url: args.url
+        async postLink(
+            parent: unknown,
+            args: { description: string; url: string },
+            context: GraphQLContext
+        ) {
+            const newLink = await context.prisma.link.create({
+                data: {
+                    url: args.url,
+                    description: args.description
+                }
+            })
+            return newLink
         }
-   
-        links.push(link)
-   
-        return link
-      }
     }
-  }
- 
+}
+
 export const schema = makeExecutableSchema({
-  resolvers: [resolvers],
-  typeDefs: [typeDefinitions]
+    resolvers: [resolvers],
+    typeDefs: [typeDefinitions]
 })
