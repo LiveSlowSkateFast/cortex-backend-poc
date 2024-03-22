@@ -6,7 +6,7 @@ import type { GraphQLContext } from './context'
 const typeDefinitions = /* GraphQL */ `
   type Query {
     info: String!
-    feed: [Link!]!
+    feed(limit: Int): [Link!]!
     comment(id: ID!): Comment
   }
  
@@ -25,13 +25,14 @@ const typeDefinitions = /* GraphQL */ `
    type Comment {
     id: ID!
     body: String!
+    link: Link!
    }
 `
 
 const resolvers = {
     Query: {
         info: () => `This is the API of a Hackernews Clone`,
-        feed: (parent: unknown, args: {}, context: GraphQLContext) => context.prisma.link.findMany(),
+        feed: (parent: unknown, args: {limit: number}, context: GraphQLContext) => context.prisma.link.findMany({ take: args.limit}),
         async comment(
             parent: unknown,
             args: { id: string },
