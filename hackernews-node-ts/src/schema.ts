@@ -47,25 +47,14 @@ const resolvers = {
         }
     },
     Link: {
-        id: (parent: Link) => parent.id,
-        description: (parent: Link) => parent.description,
-        url: (parent: Link) => parent.url,
-        comments(
-            parent: Link,
-            args: {},
-            context: GraphQLContext
-        ) {
+        comments( parent: Link, args: {}, context: GraphQLContext ) {
             return context.prisma.comment.findMany({
                 where: { linkId: parent.id }
             })
         }
     },
     Comment:{
-        link(
-            parent: Comment,
-            args: {},
-            context: GraphQLContext
-        ) {
+        link( parent: Comment, args: {}, context: GraphQLContext) {
             return context.prisma.link.findUnique({
                 where: { id: parent.linkId || undefined }
             })
@@ -73,11 +62,8 @@ const resolvers = {
     },
 
     Mutation: {
-        async postLink(
-            parent: unknown,
-            args: { description: string; url: string },
-            context: GraphQLContext
-        ) {
+        async postLink( parent: unknown, args: { description: string; url: string }, 
+            context: GraphQLContext ) {
             const newLink = await context.prisma.link.create({
                 data: {
                     url: args.url,
@@ -86,11 +72,8 @@ const resolvers = {
             })
             return newLink
         },
-        async postCommentOnLink(
-            parent: unknown,
-            args: { linkId: string; body: string },
-            context: GraphQLContext
-        ) {
+        async postCommentOnLink( parent: unknown, args: { linkId: string; body: string },
+            context: GraphQLContext ) {
             const newComment = await context.prisma.comment.create({
                 data: {
                     linkId: parseInt(args.linkId),
