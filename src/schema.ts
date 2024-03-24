@@ -4,7 +4,11 @@ import { url } from 'inspector'
 const typeDefinitions = /* GraphQL */ `
   type Query {
     info: String!
-    context(url: String!): String!
+    context(url: String!): [Note!]!
+  }
+  type Note {
+    title: String!
+    url: String!
   }
 `
 
@@ -13,6 +17,7 @@ const resolvers = {
         info: () => 'This is the Project Cortext GraphQL API',
         context: async (parent: unknown, args: { url: string }) => {
             const notionContext = await queryNotion(args.url)
+            console.log(`Notion Context: ${JSON.stringify(notionContext, null, 2)}`)
             return notionContext
         }
     }
@@ -52,12 +57,10 @@ const queryNotion = async (url: string) => {
 
     const results = response.results.map((result: any) => {
         return {
-            name: result.properties.Name.title[0].plain_text,
+            title: result.properties.Name.title[0].plain_text,
             url: result.properties['Public Url'].url,
         }
     })
-    console.log(`Received results: ${JSON.stringify(results, null, 2)}`)
-    return `This is a test of the notion query for ${url}, with results: ${JSON.stringify(results)}`
-    // return results
+    return results
 }
 
