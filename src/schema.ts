@@ -6,7 +6,7 @@ import { isFullPageOrDatabase } from '@notionhq/client'
 const typeDefinitions = /* GraphQL */ `
   type Query {
     info: String!
-    context(url: String!): [Note!]!
+    context(url: String!): [Link!]!
   }
   type Mutation {
     postLink(url: String!, title: String!): Link!
@@ -15,10 +15,6 @@ const typeDefinitions = /* GraphQL */ `
     title: String!
     url: String!
     id: String
-  }
-  type Note {
-    title: String!
-    url: String!
   }
 `
 
