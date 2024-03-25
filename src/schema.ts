@@ -1,5 +1,5 @@
 import { makeExecutableSchema } from '@graphql-tools/schema'
-import { url } from 'inspector'
+import type { GraphQLContext } from './context'
 
 const typeDefinitions = /* GraphQL */ `
   type Query {
