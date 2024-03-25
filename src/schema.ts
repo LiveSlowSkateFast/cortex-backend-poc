@@ -6,6 +6,13 @@ const typeDefinitions = /* GraphQL */ `
     info: String!
     context(url: String!): [Note!]!
   }
+  type Mutation {
+    postLink(url: String!, title: String!): Link!
+  }
+  type Link {
+    title: String!
+    url: String!
+  }
   type Note {
     title: String!
     url: String!
@@ -19,6 +26,25 @@ const resolvers = {
             const notionContext = await queryNotion(args.url)
             console.log(`Notion Context: ${JSON.stringify(notionContext, null, 2)}`)
             return notionContext
+        }
+    },
+    Mutation: {
+        async postLink(parent: unknown, args: { url: string, title: string },
+            context: GraphQLContext ) {
+            const newLink = await context.notion.pages.create({
+                parent:{
+                    database_id: '30cd6f171a484bab8bf7d264cd55dedc'
+                },
+                properties:{ 
+                    Name:{ title:[ { text:{ content: args.title } } ] }, 
+                    'Public Url':{ url: args.url } }
+            })
+            console.log(`New Link: ${JSON.stringify(newLink, null, 2)}`)
+            // TODO: Figure out why I can't access any properties of newLink other than id and object
+            return {
+                title: newLink.id,
+                url: newLink.object
+            }
         }
     }
 }
