@@ -1,6 +1,7 @@
 import { makeExecutableSchema } from '@graphql-tools/schema'
 import type { GraphQLContext } from './context'
 
+// TODO: context to return link type & remove note type until needed
 const typeDefinitions = /* GraphQL */ `
   type Query {
     info: String!
@@ -22,6 +23,7 @@ const typeDefinitions = /* GraphQL */ `
 const resolvers = {
     Query: {
         info: () => 'This is the Project Cortext GraphQL API',
+        // TODO: Refactor to use the notion client rather than fetch
         context: async (parent: unknown, args: { url: string }) => {
             const notionContext = await queryNotion(args.url)
             console.log(`Notion Context: ${JSON.stringify(notionContext, null, 2)}`)
@@ -54,6 +56,7 @@ export const schema = makeExecutableSchema({
     typeDefs: [typeDefinitions]
 })
 
+// TODO: Save this as a refernece and remove
 const queryNotion = async (url: string) => {
     console.log(`Received URL: ${url}`)
     const databaseId = '30cd6f171a484bab8bf7d264cd55dedc'

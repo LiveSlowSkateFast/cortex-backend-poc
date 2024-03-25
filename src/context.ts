@@ -5,6 +5,7 @@ const notion = new NotionClient({
   auth: process.env.NOTION_API_KEY,
 })
 
+// Define the types for the GraphQL context
 export type GraphQLContext = {
     notion: NotionClient
 }
