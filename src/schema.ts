@@ -2,7 +2,6 @@ import { makeExecutableSchema } from '@graphql-tools/schema'
 import type { GraphQLContext } from './context'
 import { isFullPageOrDatabase } from '@notionhq/client'
 
-// TODO: context to return link type & remove note type until needed
 const typeDefinitions = /* GraphQL */ `
   type Query {
     info: String!
@@ -37,7 +36,7 @@ const resolvers = {
                 .filter(isFullPageOrDatabase)
                 .map(result => ({
                     title: (result.properties.Name as any).title[0].text.content,
-                    url: result.url
+                    url: (result.properties['Public Url'] as any).url,
                 }))
         }
     },
@@ -56,7 +55,7 @@ const resolvers = {
             console.log(`New Link: ${JSON.stringify(response, null, 2)}`)
             return isFullPageOrDatabase(response) ? ({
                 title: (response.properties.Name as any).title[0].text.content,
-                url: response.url,
+                url: (response.properties['Public Url'] as any).url,
                 id: response.id
             }): null
         }
