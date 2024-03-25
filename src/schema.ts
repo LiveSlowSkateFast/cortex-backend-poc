@@ -24,8 +24,7 @@ const resolvers = {
         async context(parent: unknown, args: { url: string },
             context: GraphQLContext) {
             const response = await context.notion.databases.query({
-                // TODO: Make a link database environment variable
-                database_id: '30cd6f171a484bab8bf7d264cd55dedc',
+                database_id: process.env.NOTION_LINK_DB || '',
                 filter_properties: ['sFFJ', 'title'],
                 filter: {
                     property: 'Public Url',
@@ -47,7 +46,7 @@ const resolvers = {
             context: GraphQLContext) {
             const response = await context.notion.pages.create({
                 parent: {
-                    database_id: '30cd6f171a484bab8bf7d264cd55dedc'
+                    database_id: process.env.NOTION_LINK_DB || ''
                 },
                 properties: {
                     Name: { title: [{ text: { content: args.title } }] },
