@@ -6,6 +6,7 @@ const typeDefinitions = /* GraphQL */ `
   type Query {
     info: String!
     context(url: String!): [Link!]!
+    links(urlContains: String): [Link!]!
   }
   type Mutation {
     postLink(url: String!, title: String!): Link!
@@ -37,6 +38,27 @@ const resolvers = {
                 .map(result => ({
                     title: (result.properties.Name as any).title[0].text.content,
                     url: (result.properties['Public Url'] as any).url,
+                    id: result.id
+                }))
+        },
+        async links(parent: unknown, args: { urlContains: string },
+            context: GraphQLContext) {
+            const response = await context.notion.databases.query({
+                database_id: process.env.NOTION_LINK_DB || '',
+                filter_properties: ['sFFJ', 'title'],
+                filter: {
+                    property: 'Public Url',
+                    url: {
+                        contains: args.urlContains
+                    }
+                }
+            })
+            return response.results
+                .filter(isFullPageOrDatabase)
+                .map(result => ({
+                    title: (result.properties.Name as any).title[0].text.content,
+                    url: (result.properties['Public Url'] as any).url,
+                    id: result.id
                 }))
         }
     },
