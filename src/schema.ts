@@ -18,6 +18,26 @@ const typeDefinitions = /* GraphQL */ `
   }
 `
 
+const getLinksFromNotion = async (urlContains: string, context: GraphQLContext) => {
+    const response = await context.notion.databases.query({
+        database_id: process.env.NOTION_LINK_DB || '',
+        filter_properties: ['sFFJ', 'title'],
+        filter: {
+            property: 'Public Url',
+            url: {
+                contains: urlContains
+            }
+        }
+    })
+    return response.results
+        .filter(isFullPageOrDatabase)
+        .map(result => ({
+            title: (result.properties.Name as any).title[0].text.content,
+            url: (result.properties['Public Url'] as any).url,
+            id: result.id
+        }))
+}
+
 const resolvers = {
     Query: {
         info: () => 'This is the Project Cortext GraphQL API',
@@ -41,26 +61,12 @@ const resolvers = {
                     id: result.id
                 }))
         },
-        async links(parent: unknown, args: { urlContains: string },
-            context: GraphQLContext) {
-            const response = await context.notion.databases.query({
-                database_id: process.env.NOTION_LINK_DB || '',
-                filter_properties: ['sFFJ', 'title'],
-                filter: {
-                    property: 'Public Url',
-                    url: {
-                        contains: args.urlContains
-                    }
-                }
-            })
-            return response.results
-                .filter(isFullPageOrDatabase)
-                .map(result => ({
-                    title: (result.properties.Name as any).title[0].text.content,
-                    url: (result.properties['Public Url'] as any).url,
-                    id: result.id
-                }))
-        }
+        async links(
+            parent: unknown, 
+            args: { urlContains: string },
+            context: GraphQLContext
+            ) { return getLinksFromNotion(args.urlContains, context) 
+        },
     },
     Mutation: {
         async postLink(parent: unknown, args: { url: string, title: string },
@@ -79,7 +85,7 @@ const resolvers = {
                 title: (response.properties.Name as any).title[0].text.content,
                 url: (response.properties['Public Url'] as any).url,
                 id: response.id
-            }): null
+            }) : null
         }
     }
 }
