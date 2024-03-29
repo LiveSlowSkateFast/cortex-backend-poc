@@ -1,4 +1,4 @@
-import { Client as NotionClient } from "@notionhq/client"
+import { Client as NotionClient } from '@notionhq/client'
 
 // Initialize the Notion Client
 const notion = new NotionClient({
@@ -7,9 +7,9 @@ const notion = new NotionClient({
 
 // Define the types for the GraphQL context
 export type GraphQLContext = {
-    notion: NotionClient
+  notion: NotionClient
 }
- 
+
 export async function createContext(): Promise<GraphQLContext> {
   return { notion }
 }
