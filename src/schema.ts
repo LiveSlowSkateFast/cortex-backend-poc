@@ -1,6 +1,6 @@
 import { makeExecutableSchema } from '@graphql-tools/schema'
 import type { GraphQLContext } from './context'
-import { isFullPageOrDatabase } from '@notionhq/client'
+import { isFullPageOrDatabase, isNotionClientError } from '@notionhq/client'
 
 // TODO: Test that env vars are set
 
@@ -12,11 +12,17 @@ const typeDefinitions = /* GraphQL */ `
   }
   type Mutation {
     postLink(url: String!, title: String!): Link!
+    deleteLink(id: String!): DeleteLinkResponse!
   }
   type Link {
     title: String!
     url: String!
     id: String
+  }
+  type DeleteLinkResponse {
+    success: Boolean!
+    message: String!
+    deletedLink: Link
   }
 `
 
@@ -90,7 +96,7 @@ const resolvers = {
           'Public Url': { url: args.url },
         },
       })
-      console.log(`New Link: ${JSON.stringify(response, null, 2)}`)
+      // console.log(`New Link: ${JSON.stringify(response, null, 2)}`)
       return isFullPageOrDatabase(response)
         ? {
             title: (response.properties.Name as any).title[0].text.content,
@@ -98,6 +104,37 @@ const resolvers = {
             id: response.id,
           }
         : null
+    },
+    async deleteLink(
+      parent: unknown,
+      args: { id: string },
+      context: GraphQLContext,
+    ) {
+      try {
+        const response = await context.notion.pages.update({
+          page_id: args.id,
+          archived: true,
+        })
+        return (
+          isFullPageOrDatabase(response) && {
+            success: true,
+            message: 'Link deleted successfully',
+            deletedLink: {
+              title: (response.properties.Name as any).title[0].text.content,
+              url: (response.properties['Public Url'] as any).url,
+              id: response.id,
+            },
+          }
+        )
+      } catch (error: unknown) {
+        return (
+          isNotionClientError(error) && {
+            success: false,
+            message: error.message,
+            deletedLink: null,
+          }
+        )
+      }
     },
   },
 }
